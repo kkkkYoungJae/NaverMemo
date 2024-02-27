@@ -38,6 +38,8 @@ private struct SetTimerView: View {
                 .frame(height: 30)
             
             TimerCreateBtnView(timerViewModel: timerViewModel)
+            
+            Spacer()
         }
     }
 }

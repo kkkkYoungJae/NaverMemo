@@ -10,21 +10,21 @@ class VoiceRecorderViewModel: NSObject, ObservableObject, AVAudioPlayerDelegate 
     @Published var isDisplayAlert: Bool
     @Published var alertMessage: String
     
-    // 음성메모 녹음 관련 프로퍼티
+    /// 음성메모 녹음 관련 프로퍼티
     var audioRecorder: AVAudioRecorder?
     @Published var isRecording: Bool
     
-    // 음성메모 재생 관련 프로퍼티
+    /// 음성메모 재생 관련 프로퍼티
     var audioPlayer: AVAudioPlayer?
     @Published var isPlaying: Bool
     @Published var isPaused: Bool
     @Published var playedTime: TimeInterval
     private var progressTimer: Timer?
     
-    // 음성메모된 파일
+    /// 음성메모된 파일
     var recordedFiles: [URL]
     
-    // 현재 선택된 음성메모 파일
+    /// 현재 선택된 음성메모 파일
     @Published var selectedRecoredFile: URL?
     
     init(
@@ -72,9 +72,10 @@ extension VoiceRecorderViewModel {
         do {
             try FileManager.default.removeItem(at: fileToRemove)
             recordedFiles.remove(at: indexToRemove)
+            selectedRecoredFile = nil
             stopPlaying()
             displayAlert(message: "선택된 음성메모 파일을 성공적으로 삭제했습니다.")
-        }catch {
+        } catch {
             displayAlert(message: "선택된 음성메모 파일 삭제 중 오류가 발생했습니다.")
         }
     }
@@ -122,7 +123,7 @@ extension VoiceRecorderViewModel {
         ]
         
         do {
-            audioRecorder = try AVAudioRecorder(url:fileURL, settings: settings)
+            audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
             audioRecorder?.record()
             self.isRecording = true
         } catch {
@@ -131,7 +132,7 @@ extension VoiceRecorderViewModel {
     }
     
     private func stopRecording() {
-        audioRecorder?.stop()
+        audioRecorder?.stop() 
         self.recordedFiles.append(self.audioRecorder!.url)
         self.isRecording = false
     }
@@ -153,10 +154,10 @@ extension VoiceRecorderViewModel {
             self.isPaused = false
             self.progressTimer = Timer.scheduledTimer(
                 withTimeInterval: 0.1,
-                repeats: true,
-                block: { _ in
-                    self.updateCurrentTime()
-                })
+                repeats: true
+            ) { _ in
+                self.updateCurrentTime()
+            }
         } catch {
             displayAlert(message: "음성메모 재생 중 오류가 발생했습니다.")
         }
@@ -166,7 +167,7 @@ extension VoiceRecorderViewModel {
         self.playedTime = audioPlayer?.currentTime ?? 0
     }
     
-    func stopPlaying() {
+    private func stopPlaying() {
         audioPlayer?.stop()
         playedTime = 0
         self.progressTimer?.invalidate()

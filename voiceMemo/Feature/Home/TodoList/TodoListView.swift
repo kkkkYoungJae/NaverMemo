@@ -8,6 +8,7 @@ import SwiftUI
 struct TodoListView: View {
     @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var todoListViewModel: TodoListViewModel
+    @EnvironmentObject private var homeViewModel: HomeViewModel
     
     var body: some View {
         ZStack {
@@ -43,7 +44,7 @@ struct TodoListView: View {
         }
         .alert(
             "To do list \(todoListViewModel.removeTodosCount)개 삭제하시겠습니까?",
-               isPresented: $todoListViewModel.isDisplayRemoveTodoAlert
+            isPresented: $todoListViewModel.isDisplayRemoveTodoAlert
         ){
             Button("삭제", role: .destructive){
                 todoListViewModel.removeBtnTapped()
@@ -52,6 +53,12 @@ struct TodoListView: View {
                 
             }
         }
+        .onChange(
+            of: todoListViewModel.todos,
+            perform: { todos in
+                homeViewModel.setTodosCount(todos.count)
+            }
+        )
     }
 }
 

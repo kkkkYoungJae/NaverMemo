@@ -7,6 +7,7 @@ import SwiftUI
 
 struct VoiceRecorderView: View {
     @StateObject private var voiceRecorderViewModel = VoiceRecorderViewModel()
+    @EnvironmentObject private var homeViewModel: HomeViewModel
     
     var body: some View {
         ZStack {
@@ -42,15 +43,19 @@ struct VoiceRecorderView: View {
         ) {
             Button("확인", role: .cancel) { }
         }
+        .onChange(
+            of: voiceRecorderViewModel.recordedFiles,
+            perform: { recordedFiles in
+                homeViewModel.setVoiceRecordersCount(recordedFiles.count)
+            }
+        )
     }
 }
-
-
 
 // MARK: - 타이틀 뷰
 private struct TitleView: View {
     fileprivate var body: some View {
-        HStack{
+        HStack {
             Text("음성메모")
                 .font(.system(size: 30, weight: .bold))
                 .foregroundColor(.customBlack)
@@ -62,16 +67,16 @@ private struct TitleView: View {
     }
 }
 
-// MARK: - 안내 뷰
+// MARK: - 음성메모 안내 뷰
 private struct AnnouncementView: View {
     fileprivate var body: some View {
-        VStack(spacing:15) {
+        VStack(spacing: 15) {
             Rectangle()
                 .fill(Color.customCoolGray)
                 .frame(height: 1)
             
             Spacer()
-                .frame(height: 100)
+                .frame(height: 180)
             
             Image("pencil")
                 .renderingMode(.template)
@@ -85,7 +90,7 @@ private struct AnnouncementView: View {
     }
 }
 
-// MARK: - 리스트 뷰
+// MARK: - 음성메모 리스트 뷰
 private struct VoiceRecorderListView: View {
     @ObservedObject private var voiceRecorderViewModel: VoiceRecorderViewModel
     
@@ -111,7 +116,7 @@ private struct VoiceRecorderListView: View {
     }
 }
 
-// MARK: - 셀 뷰
+// MARK: - 음성메모 셀 뷰
 private struct VoiceRecorderCellView: View {
     @ObservedObject private var voiceRecorderViewModel: VoiceRecorderViewModel
     private var recordedFile: URL
@@ -119,8 +124,7 @@ private struct VoiceRecorderCellView: View {
     private var duration: TimeInterval?
     private var progressBarValue: Float {
         if voiceRecorderViewModel.selectedRecoredFile == recordedFile
-            && (voiceRecorderViewModel.isPlaying
-                || voiceRecorderViewModel.isPaused){
+            && (voiceRecorderViewModel.isPlaying || voiceRecorderViewModel.isPaused) {
             return Float(voiceRecorderViewModel.playedTime) / Float(duration ?? 1)
         } else {
             return 0
@@ -137,7 +141,7 @@ private struct VoiceRecorderCellView: View {
     }
     
     fileprivate var body: some View {
-        VStack{
+        VStack {
             Button(
                 action: {
                     voiceRecorderViewModel.voiceRecordCellTapped(recordedFile)
@@ -147,6 +151,7 @@ private struct VoiceRecorderCellView: View {
                         HStack {
                             Text(recordedFile.lastPathComponent)
                                 .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(.customBlack)
                             
                             Spacer()
                         }
@@ -154,7 +159,7 @@ private struct VoiceRecorderCellView: View {
                         Spacer()
                             .frame(height: 5)
                         
-                        HStack{
+                        HStack {
                             if let creationDate = creationDate {
                                 Text(creationDate.formattedVoiceRecorderTime)
                                     .font(.system(size: 14))
@@ -183,7 +188,7 @@ private struct VoiceRecorderCellView: View {
                     Spacer()
                         .frame(height: 5)
                     
-                    HStack{
+                    HStack {
                         Text(voiceRecorderViewModel.playedTime.formattedTimeInterval)
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.customIconGray)
@@ -252,6 +257,7 @@ private struct VoiceRecorderCellView: View {
                 }
                 .padding(.horizontal, 20)
             }
+            
             Rectangle()
                 .fill(Color.customGray2)
                 .frame(height: 1)
@@ -259,7 +265,7 @@ private struct VoiceRecorderCellView: View {
     }
 }
 
-// MARK: - 프로그래스바
+// MARK: - 프로그레스 바
 private struct ProgressBar: View {
     private var progress: Float
     
@@ -284,16 +290,21 @@ private struct ProgressBar: View {
 // MARK: - 녹음 버튼 뷰
 private struct RecordBtnView: View {
     @ObservedObject private var voiceRecorderViewModel: VoiceRecorderViewModel
+    @State private var isAnimation: Bool
     
-    fileprivate init(voiceRecorderViewModel: VoiceRecorderViewModel) {
+    fileprivate init(
+        voiceRecorderViewModel: VoiceRecorderViewModel,
+        isAnimation: Bool = false
+    ) {
         self.voiceRecorderViewModel = voiceRecorderViewModel
+        self.isAnimation = isAnimation
     }
     
     fileprivate var body: some View {
-        VStack{
+        VStack {
             Spacer()
             
-            HStack{
+            HStack {
                 Spacer()
                 
                 Button(
@@ -303,6 +314,15 @@ private struct RecordBtnView: View {
                     label: {
                         if voiceRecorderViewModel.isRecording {
                             Image("mic_recording")
+                                .scaleEffect(isAnimation ? 1.5 : 1)
+                                .onAppear {
+                                    withAnimation(.spring().repeatForever()) {
+                                        isAnimation.toggle()
+                                    }
+                                }
+                                .onDisappear {
+                                    isAnimation = false
+                                }
                         } else {
                             Image("mic")
                         }

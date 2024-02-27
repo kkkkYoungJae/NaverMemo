@@ -15,7 +15,7 @@ extension Int {
         return "\(hoursString) : \(minutesString) : \(secondsString)"
     }
     
-    var formattedSettingTime: String{
+    var formattedSettingTime: String {
         let currentDate = Date()
         let settingDate = currentDate.addingTimeInterval(TimeInterval(self))
         
@@ -24,6 +24,7 @@ extension Int {
         formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
         formatter.dateFormat = "HH:mm"
         
-        return formatter.string(from: settingDate)
+        let formattedTime = formatter.string(from: settingDate)
+        return formattedTime
     }
 }
